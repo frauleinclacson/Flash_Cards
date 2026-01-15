@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 Flashcard Study App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            height: fit-content;
+        }
+
+        .section-title {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .deck-list {
+            margin-bottom: 25px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .deck-item {
+            background: #f8f9ff;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .deck-item:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .deck-item.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .deck-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .deck-stats {
+            font-size: 0.85em;
+            opacity: 0.8;
+            display: flex;
+            gap: 10px;
+        }
+
+        .delete-deck-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.8em;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .deck-item:hover .delete-deck-btn {
+            opacity: 1;
+        }
+
+        .deck-item.active .delete-deck-btn {
+            opacity: 1;
+            background: white;
+            color: #ef4444;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4b5563;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .input-group input, .input-group textarea, .input-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .input-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            margin-top: 10px;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .study-area {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #9ca3af;
+        }
+
+        .step.active {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .step.active .step-number {
+            background: #667eea;
+            color: white;
+        }
+
+        .study-mode, .select-deck-mode, .select-difficulty-mode, .select-timer-mode {
+            display: none;
+        }
+
+        .card-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .card-item {
+            background: #f8f9ff;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+        }
+
+        .card-question {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #1f2937;
+        }
+
+        .card-answer {
+            color: #6b7280;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .difficulty-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .difficulty-badge.easy {
+            background: #10b981;
+            color: white;
+        }
+
+        .difficulty-badge.medium {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .difficulty-badge.hard {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-delete-card {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85em;
+        }
+
+        .btn-delete-card:hover {
+            background: #dc2626;
+        }
+
+        .option-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .option-card {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 12px;
+            border: 3px solid #e5e7eb;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .option-card:hover {
+            border-color: #667eea;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+
+        .option-card.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .option-title {
+            font-weight: 600;
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+
+        .option-desc {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        .flashcard {
+            perspective: 1000px;
+            margin: 30px 0;
+        }
+
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            min-height: 350px;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+
+        .flashcard-inner.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front, .flashcard-back {
+            position: absolute;
+            width: 100%;
+            min-height: 350px;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            cursor: pointer;
+        }
+
+        .flashcard-front {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .flashcard-back {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            transform: rotateY(180deg);
+        }
+
+        .card-content {
+            font-size: 1.8em;
+            text-align: center;
+            word-wrap: break-word;
+        }
+
+        .card-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .timer-display {
+            font-size: 3em;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .timer-display.warning {
+            color: #f59e0b;
+            animation: pulse 1s infinite;
+        }
+
+        .timer-display.danger {
+            color: #ef4444;
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .navigation {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .nav-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .progress-info {
+            text-align: center;
+            color: #667eea;
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9ca3af;
+        }
+
+        .empty-state h2 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .divider {
+            border-top: 2px solid #e5e7eb;
+            margin: 25px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Flashcard Study App</h1>
+            <p>Study smarter with organized decks!</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <div class="section-title">📂 Your Decks</div>
+                <div class="deck-list" id="deckList"></div>
+                
+                <div class="divider"></div>
+                
+                <div class="section-title">➕ Create Deck</div>
+                <div class="input-group">
+                    <input type="text" id="newDeckName" placeholder="Enter deck name...">
+                </div>
+                <button class="btn btn-primary" onclick="createDeck()">Create New Deck</button>
+            </div>
+
+            <!-- Main Study Area -->
+            <div class="study-area">
+                <!-- Initial State -->
+                <div id="initialState">
+                    <div class="empty-state">
+                        <h2>Welcome! 👋</h2>
+                        <p>Create a deck or select an existing one to get started</p>
+                    </div>
+                </div>
+
+                <!-- Deck Management -->
+                <div id="deckManagement" style="display: none;">
+                    <h2 style="color: #667eea; margin-bottom: 20px;" id="selectedDeckTitle">Deck Name</h2>
+                    
+                    <div class="section-title">📝 Add New Card</div>
+                    
+                    <div class="input-group">
+                        <label>Question</label>
+                        <textarea id="cardQuestion" placeholder="Enter your question..."></textarea>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Difficulty</label>
+                        <select id="cardDifficulty">
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Answer</label>
+                        <textarea id="cardAnswer" placeholder="Enter the answer..."></textarea>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="addCard()">Add Card to Deck</button>
+
+                    <div class="divider"></div>
+
+                    <div class="section-title">🎯 Study This Deck</div>
+                    <button class="btn btn-primary" onclick="startStudyProcess()">Start Studying</button>
+
+                    <div class="divider"></div>
+
+                    <div class="section-title">📋 Cards in This Deck</div>
+                    <div class="card-list" id="cardList"></div>
+                </div>
+
+                <!-- Study Process: Step 1 - Select Difficulty -->
+                <div id="selectDifficultyMode" class="select-difficulty-mode">
+                    <div class="step-indicator">
+                        <div class="step active">
+                            <div class="step-number">1</div>
+                            <span>Difficulty</span>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <span>Timer</span>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <span>Study</span>
+                        </div>
+                    </div>
+
+                    <h2 style="color: #667eea; text-align: center; margin-bottom: 30px;">Choose Difficulty Filter</h2>
+                    
+                    <div class="option-grid">
+                        <div class="option-card" onclick="selectDifficultyFilter('easy')">
+                            <div class="option-title" style="color: #10b981;">Easy</div>
+                            <div class="option-desc">Study easy cards</div>
+                        </div>
+                        <div class="option-card" onclick="selectDifficultyFilter('medium')">
+                            <div class="option-title" style="color: #f59e0b;">Medium</div>
+                            <div class="option-desc">Study medium cards</div>
+                        </div>
+                        <div class="option-card" onclick="selectDifficultyFilter('hard')">
+                            <div class="option-title" style="color: #ef4444;">Hard</div>
+                            <div class="option-desc">Study hard cards</div>
+                        </div>
+                        <div class="option-card" onclick="selectDifficultyFilter('easy,medium')">
+                            <div class="option-title">Easy + Medium</div>
+                            <div class="option-desc">Mixed practice</div>
+                        </div>
+                        <div class="option-card" onclick="selectDifficultyFilter('medium,hard')">
+                            <div class="option-title">Medium + Hard</div>
+                            <div class="option-desc">Challenge mode</div>
+                        </div>
+                        <div class="option-card" onclick="selectDifficultyFilter('all')">
+                            <div class="option-title">All Cards</div>
+                            <div class="option-desc">Complete review</div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="cancelStudy()">Cancel</button>
+                    </div>
+                </div>
+
+                <!-- Study Process: Step 2 - Select Timer -->
+                <div id="selectTimerMode" class="select-timer-mode">
+                    <div class="step-indicator">
+                        <div class="step">
+                            <div class="step-number">✓</div>
+                            <span>Difficulty</span>
+                        </div>
+                        <div class="step active">
+                            <div class="step-number">2</div>
+                            <span>Timer</span>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <span>Study</span>
+                        </div>
+                    </div>
+
+                    <h2 style="color: #667eea; text-align: center; margin-bottom: 30px;">Choose Timer Setting</h2>
+                    
+                    <div class="option-grid">
+                        <div class="option-card" onclick="selectTimer(10)">
+                            <div class="option-title">⚡ 10 Seconds</div>
+                            <div class="option-desc">Quick review</div>
+                        </div>
+                        <div class="option-card" onclick="selectTimer(30)">
+                            <div class="option-title">⏱️ 30 Seconds</div>
+                            <div class="option-desc">Standard pace</div>
+                        </div>
+                        <div class="option-card" onclick="selectTimer(60)">
+                            <div class="option-title">🕐 1 Minute</div>
+                            <div class="option-desc">Relaxed study</div>
+                        </div>
+                        <div class="option-card" onclick="selectTimer(0)">
+                            <div class="option-title">♾️ No Timer</div>
+                            <div class="option-desc">Take your time</div>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" onclick="backToDifficulty()">Back</button>
+                        <button class="btn btn-secondary" onclick="cancelStudy()">Cancel</button>
+                    </div>
+                </div>
+
+                <!-- Study Process: Step 3 - Study Mode -->
+                <div id="studyMode" class="study-mode">
+                    <div class="step-indicator">
+                        <div class="step">
+                            <div class="step-number">✓</div>
+                            <span>Difficulty</span>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">✓</div>
+                            <span>Timer</span>
+                        </div>
+                        <div class="step active">
+                            <div class="step-number">3</div>
+                            <span>Study</span>
+                        </div>
+                    </div>
+
+                    <div class="timer-display" id="timerDisplay">Ready!</div>
+                    <div class="progress-info" id="progressInfo">Card 1 of 10</div>
+
+                    <div class="flashcard" onclick="flipCard()">
+                        <div class="flashcard-inner" id="flashcardInner">
+                            <div class="flashcard-front">
+                                <div class="difficulty-badge" id="frontDifficulty">Easy</div>
+                                <div class="card-label">Question</div>
+                                <div class="card-content" id="questionText">Click to start!</div>
+                            </div>
+                            <div class="flashcard-back">
+                                <div class="difficulty-badge" id="backDifficulty">Easy</div>
+                                <div class="card-label">Answer</div>
+                                <div class="card-content" id="answerText">Answer here</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="navigation">
+                        <button class="nav-btn btn-secondary" onclick="previousCard()">← Previous</button>
+                        <button class="nav-btn btn-primary" onclick="nextCard()">Next →</button>
+                        <button class="nav-btn btn-secondary" onclick="shuffleCards()">🔀 Shuffle</button>
+                        <button class="nav-btn btn-danger" onclick="endStudySession()">End Session</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let decks = [];
+        let currentDeckIndex = null;
+        let currentCardIndex = 0;
+        let studyCards = [];
+        let timerSeconds = 0;
+        let timerInterval = null;
+        let isFlipped = false;
+        let selectedDifficulty = '';
+
+        // Load decks on page load
+        window.onload = function() {
+            const saved = localStorage.getItem('flashcardDecks');
+            if (saved) {
+                decks = JSON.parse(saved);
+            } else {
+                decks = [{
+                    name: "Sample Deck",
+                    cards: [
+                        {question: "What is the capital of France?", answer: "Paris", difficulty: "easy"},
+                        {question: "What is 15 × 12?", answer: "180", difficulty: "medium"},
+                        {question: "Explain quantum entanglement", answer: "A quantum phenomenon where particles become interconnected", difficulty: "hard"}
+                    ]
+                }];
+            }
+            renderDecks();
+        };
+
+        function saveDecks() {
+            localStorage.setItem('flashcardDecks', JSON.stringify(decks));
+        }
+
+        function createDeck() {
+            const input = document.getElementById('newDeckName');
+            const name = input.value.trim();
+
+            if (!name) {
+                alert('Please enter a deck name!');
+                return;
+            }
+
+            decks.push({name: name, cards: []});
+            saveDecks();
+            renderDecks();
+            input.value = '';
+            alert(`Deck "${name}" created successfully! 🎉`);
+        }
+
+        function renderDecks() {
+            const list = document.getElementById('deckList');
+
+            if (decks.length === 0) {
+                list.innerHTML = '<div style="color: #999; text-align: center; padding: 20px;">No decks yet</div>';
+                return;
+            }
+
+            list.innerHTML = decks.map((deck, i) => {
+                const easy = deck.cards.filter(c => c.difficulty === 'easy').length;
+                const medium = deck.cards.filter(c => c.difficulty === 'medium').length;
+                const hard = deck.cards.filter(c => c.difficulty === 'hard').length;
+
+                return `
+                    <div class="deck-item ${currentDeckIndex === i ? 'active' : ''}" onclick="selectDeck(${i})">
+                        <button class="delete-deck-btn" onclick="event.stopPropagation(); deleteDeck(${i})">Delete</button>
+                        <div class="deck-name">${deck.name}</div>
+                        <div class="deck-stats">
+                            <span>📊 ${deck.cards.length} cards</span>
+                            <span style="color: #10b981;">E: ${easy}</span>
+                            <span style="color: #f59e0b;">M: ${medium}</span>
+                            <span style="color: #ef4444;">H: ${hard}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectDeck(index) {
+            currentDeckIndex = index;
+            renderDecks();
+            showDeckManagement();
+            renderCardList();
+        }
+
+        function showDeckManagement() {
+            document.getElementById('initialState').style.display = 'none';
+            document.getElementById('deckManagement').style.display = 'block';
+            document.getElementById('selectDifficultyMode').style.display = 'none';
+            document.getElementById('selectTimerMode').style.display = 'none';
+            document.getElementById('studyMode').style.display = 'none';
+            document.getElementById('selectedDeckTitle').textContent = decks[currentDeckIndex].name;
+        }
+
+        function addCard() {
+            if (currentDeckIndex === null) {
+                alert('Please select a deck first!');
+                return;
+            }
+
+            const question = document.getElementById('cardQuestion').value.trim();
+            const answer = document.getElementById('cardAnswer').value.trim();
+            const difficulty = document.getElementById('cardDifficulty').value;
+
+            if (!question || !answer) {
+                alert('Please enter both question and answer!');
+                return;
+            }
+
+            decks[currentDeckIndex].cards.push({
+                question: question,
+                answer: answer,
+                difficulty: difficulty
+            });
+
+            saveDecks();
+            renderDecks();
+            renderCardList();
+
+            document.getElementById('cardQuestion').value = '';
+            document.getElementById('cardAnswer').value = '';
+            document.getElementById('cardDifficulty').value = 'easy';
+
+            alert('Card added successfully! 🎉');
+        }
+
+        function renderCardList() {
+            const list = document.getElementById('cardList');
+            const deck = decks[currentDeckIndex];
+
+            if (deck.cards.length === 0) {
+                list.innerHTML = '<div style="color: #999; text-align: center; padding: 20px;">No cards yet. Add some above!</div>';
+                return;
+            }
+
+            list.innerHTML = deck.cards.map((card, i) => `
+                <div class="card-item">
+                    <div class="card-question">Q: ${card.question}</div>
+                    <div class="card-answer">A: ${card.answer}</div>
+                    <div class="card-meta">
+                        <span class="difficulty-badge ${card.difficulty}">${card.difficulty}</span>
+                        <button class="btn-delete-card" onclick="deleteCard(${i})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteCard(index) {
+            if (confirm('Delete this card?')) {
+                decks[currentDeckIndex].cards.splice(index, 1);
+                saveDecks();
+                renderDecks();
+                renderCardList();
+            }
+        }
+
+        function deleteDeck(index) {
+            if (confirm(`Delete "${decks[index].name}" and all its cards?`)) {
+                decks.splice(index, 1);
+                saveDecks();
+                currentDeckIndex = null;
+                renderDecks();
+                document.getElementById('initialState').style.display = 'block';
+                document.getElementById('deckManagement').style.display = 'none';
+            }
+        }
+
+        function startStudyProcess() {
+            if (decks[currentDeckIndex].cards.length === 0) {
+                alert('This deck has no cards! Add some first.');
+                return;
+            }
+
+            document.getElementById('deckManagement').style.display = 'none';
+            document.getElementById('selectDifficultyMode').style.display = 'block';
+        }
+
+        function selectDifficultyFilter(filter) {
+            selectedDifficulty = filter;
+            document.getElementById('selectDifficultyMode').style.display = 'none';
+            document.getElementById('selectTimerMode').style.display = 'block';
+        }
+
+        function selectTimer(seconds) {
+            timerSeconds = seconds;
+            
+            // Filter cards based on difficulty
+            const deck = decks[currentDeckIndex];
+            if (selectedDifficulty === 'all') {
+                studyCards = [...deck.cards];
+            } else {
+                const difficulties = selectedDifficulty.split(',');
+                studyCards = deck.cards.filter(c => difficulties.includes(c.difficulty));
+            }
+
+            if (studyCards.length === 0) {
+                alert('No cards match this difficulty filter!');
+                return;
+            }
+
+            currentCardIndex = 0;
+            document.getElementById('selectTimerMode').style.display = 'none';
+            document.getElementById('studyMode').style.display = 'block';
+            displayCard();
+        }
+
+        function displayCard() {
+            if (studyCards.length === 0) return;
+            
+            const card = studyCards[currentCardIndex];
+            
+            document.getElementById('questionText').textContent = card.question;
+            document.getElementById('answerText').textContent = card.answer;
+            
+            const diffBadge = card.difficulty.charAt(0).toUpperCase() + card.difficulty.slice(1);
+            document.getElementById('frontDifficulty').textContent = diffBadge;
+            document.getElementById('frontDifficulty').className = `difficulty-badge ${card.difficulty}`;
+            document.getElementById('backDifficulty').textContent = diffBadge;
+            document.getElementById('backDifficulty').className = `difficulty-badge ${card.difficulty}`;
+
+            document.getElementById('progressInfo').textContent = `Card ${currentCardIndex + 1} of ${studyCards.length}`;
+
+            // Reset to question side
+            isFlipped = false;
+            document.getElementById('flashcardInner').classList.remove('flipped');
+            
+            // Start timer
+            startTimer();
+        }
+
+        function flipCard() {
+            isFlipped = !isFlipped;
+            document.getElementById('flashcardInner').classList.toggle('flipped');
+            
+            // Stop timer when flipping to answer
+            if (isFlipped) {
+                clearInterval(timerInterval);
+            }
+        }
+
+        function nextCard() {
+            if (studyCards.length === 0) return;
+            currentCardIndex = (currentCardIndex + 1) % studyCards.length;
+            displayCard();
+        }
+
+        function previousCard() {
+            if (studyCards.length === 0) return;
+            currentCardIndex = (currentCardIndex - 1 + studyCards.length) % studyCards.length;
+            displayCard();
+        }
+
+        function shuffleCards() {
+            for (let i = studyCards.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [studyCards[i], studyCards[j]] = [studyCards[j], studyCards[i]];
+            }
+            currentCardIndex = 0;
+            displayCard();
+            alert('Cards shuffled! 🔀');
+        }
+
+        function startTimer() {
+            // Clear any existing timer
+            clearInterval(timerInterval);
+            
+            if (timerSeconds === 0) {
+                document.getElementById('timerDisplay').textContent = 'No Timer';
+                document.getElementById('timerDisplay').className = 'timer-display';
+                return;
+            }
+
+            let remaining = timerSeconds;
+            updateTimerDisplay(remaining);
+
+            timerInterval = setInterval(() => {
+                remaining--;
+                updateTimerDisplay(remaining);
+
+                if (remaining <= 0) {
+                    clearInterval(timerInterval);
+                    // When timer runs out, automatically go to next card
+                    setTimeout(() => {
+                        nextCard();
+                    }, 500);
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay(seconds) {
+            const display = document.getElementById('timerDisplay');
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            display.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+            display.className = 'timer-display';
+            if (seconds <= 5 && seconds > 0) {
+                display.className = 'timer-display danger';
+            } else if (seconds <= 10 && seconds > 0) {
+                display.className = 'timer-display warning';
+            }
+        }
+
+        function endStudySession() {
+            clearInterval(timerInterval);
+            alert('Great study session! 🎉');
+            showDeckManagement();
+        }
+
+        function cancelStudy() {
+            clearInterval(timerInterval);
+            showDeckManagement();
+        }
+
+        function backToDifficulty() {
+            document.getElementById('selectTimerMode').style.display = 'none';
+            document.getElementById('selectDifficultyMode').style.display = 'block';
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (document.getElementById('studyMode').style.display === 'block') {
+                if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    flipCard();
+                } else if (e.key === 'ArrowRight') {
+                    nextCard();
+                } else if (e.key === 'ArrowLeft') {
+                    previousCard();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
